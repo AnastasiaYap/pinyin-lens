@@ -173,9 +173,12 @@ not bugs to be fixed later:
 - Where two cards would collide the smaller is dropped, so a dense screen is
   annotated only in part. Turning **Whole screen card size** down shrinks the
   cards and reduces both the spill and the collisions.
-- While the screen is moving the cards hide rather than linger over content
-  that has scrolled away, and come back ~180 ms after it settles. On a screen
-  that never stops changing they are forced back after 700 ms regardless.
+- While the screen is *moving* the cards hide rather than linger over content
+  that has scrolled away, and come back ~180 ms after it settles. Only a scroll
+  or a window change counts as movement — apps emit content-changed events
+  constantly for animations and live content, and reacting to those made an
+  idle screen blink. A refresh that yields the same text in the same places
+  redraws nothing at all.
 - Text that isn't a text node — canvas drawing, games, video subtitles, text
   inside images — cannot be seen at all and stays unannotated.
 - ColorOS may revoke the accessibility grant on reboot or under battery

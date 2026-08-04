@@ -54,10 +54,20 @@ class PinyinAccessibilityService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         val view = overlay ?: return
-        // Whatever is drawn now describes the previous frame. Hide it at once
-        // rather than leaving annotations over content that has scrolled away,
-        // then redraw when the screen settles.
-        view.markStale()
+
+        // Only hide the cards when something has actually moved. A scroll or a
+        // new window invalidates every position, so the old cards would sit
+        // over the wrong text. TYPE_WINDOW_CONTENT_CHANGED does not imply
+        // movement at all — apps emit it constantly for animations and live
+        // content — and hiding on it makes an idle screen blink.
+        val moved = when (event?.eventType) {
+            AccessibilityEvent.TYPE_VIEW_SCROLLED,
+            AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED,
+            -> true
+            else -> false
+        }
+        if (moved) view.markStale()
+
         handler.removeCallbacks(refresh)
 
         // A screen that never stops emitting events would reset the debounce
@@ -187,8 +197,12 @@ class PinyinAccessibilityService : AccessibilityService() {
         /** Long enough to coalesce a scroll, short enough not to feel stuck. */
         private const val DEBOUNCE_MS = 180L
 
-        /** Upper bound on how long cards may stay hidden during constant churn. */
-        private const val FORCE_REFRESH_MS = 700L
+        /**
+         * Safety net for an app that emits scroll events without ever pausing:
+         * cards would otherwise stay hidden forever. Kept long, because each
+         * forced pass during a real scroll is itself a visible flash.
+         */
+        private const val FORCE_REFRESH_MS = 1_500L
 
         /** A hard stop so a pathological tree can't stall the main thread. */
         private const val MAX_BLOCKS = 120

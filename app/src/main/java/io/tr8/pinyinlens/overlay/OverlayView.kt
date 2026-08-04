@@ -106,7 +106,12 @@ class OverlayView(context: Context) : View(context) {
     }
 
     fun setBlocks(blocks: List<Block>) {
+        // A refresh that produces the same text in the same places should cost
+        // nothing on screen. Redrawing regardless is what turns a harmless
+        // content-changed event into a visible flicker.
+        val unchanged = blocks == pending
         pending = blocks
+        if (unchanged && !stale) return
         stale = false
         relayout()
     }
