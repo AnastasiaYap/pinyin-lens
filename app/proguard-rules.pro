@@ -9,3 +9,6 @@
 
 # The accessibility service is instantiated by the system from the manifest.
 -keep class io.tr8.pinyinlens.overlay.PinyinAccessibilityService { *; }
+
+# org.json is used to parse the GitHub releases response.
+-dontwarn org.json.**

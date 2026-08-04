@@ -5,6 +5,7 @@ import android.app.StatusBarManager
 import android.content.ComponentName
 import android.content.Intent
 import android.provider.Settings
+import android.text.format.Formatter
 import android.graphics.drawable.Icon
 import android.os.Build
 import android.os.Bundle
@@ -22,11 +23,14 @@ import androidx.lifecycle.lifecycleScope
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
 import io.tr8.pinyinlens.databinding.ActivityMainBinding
 import io.tr8.pinyinlens.pinyin.PinyinEngine
+import io.tr8.pinyinlens.update.UpdateChecker
+import io.tr8.pinyinlens.update.Updater
 import io.tr8.pinyinlens.overlay.PinyinAccessibilityService
 import io.tr8.pinyinlens.toggle.Lens
 import io.tr8.pinyinlens.toggle.Overlay
 import io.tr8.pinyinlens.toggle.NotificationController
 import io.tr8.pinyinlens.toggle.Prefs
+import io.tr8.pinyinlens.toggle.Prefs.autoUpdateCheck
 import io.tr8.pinyinlens.toggle.Prefs.notificationEnabled
 import io.tr8.pinyinlens.toggle.Prefs.overlayScalePercent
 import io.tr8.pinyinlens.toggle.Prefs.onboarded
@@ -115,6 +119,12 @@ class MainActivity : AppCompatActivity() {
         }
 
         binding.grantAccessibility.setOnClickListener { showOverlaySetup() }
+
+        binding.autoUpdateSwitch.setOnCheckedChangeListener { button, checked ->
+            if (!button.isPressed) return@setOnCheckedChangeListener
+            autoUpdateCheck = checked
+        }
+        binding.checkUpdates.setOnClickListener { checkForUpdates(manual = true) }
         binding.helpButton.setOnClickListener { showWelcome() }
 
         binding.sizeSlider.apply {
@@ -159,6 +169,9 @@ class MainActivity : AppCompatActivity() {
             if (!onboarded) {
                 showWelcome()
                 onboarded = true
+            } else if (autoUpdateCheck) {
+                // Quietly on launch: only speak up if there is something newer.
+                checkForUpdates(manual = false)
             }
         }
     }
@@ -174,6 +187,7 @@ class MainActivity : AppCompatActivity() {
         binding.lensSwitch.isChecked = Lens.isEnabled(this)
         binding.toneSwitch.isChecked = toneColors
         binding.preview.toneColors = toneColors
+        binding.autoUpdateSwitch.isChecked = autoUpdateCheck
         binding.sizeSlider.value = textSizeSp
         binding.overlaySizeSlider.value = overlayScalePercent
         binding.preview.baseTextSizeSp = textSizeSp
@@ -211,6 +225,80 @@ class MainActivity : AppCompatActivity() {
             }
         }
     }
+
+    private fun checkForUpdates(manual: Boolean) {
+        if (manual) {
+            binding.checkUpdates.isEnabled = false
+            binding.checkUpdates.setText(R.string.checking)
+        }
+        lifecycleScope.launch {
+            val release = UpdateChecker.latest()
+            if (manual) {
+                binding.checkUpdates.isEnabled = true
+                binding.checkUpdates.setText(R.string.check_updates)
+            }
+            when {
+                release == null ->
+                    if (manual) toast(getString(R.string.check_failed))
+                UpdateChecker.isNewer(release.versionName, BuildConfig.VERSION_NAME) ->
+                    showUpdateAvailable(release)
+                else ->
+                    if (manual) toast(getString(R.string.up_to_date, BuildConfig.VERSION_NAME))
+            }
+        }
+    }
+
+    private fun showUpdateAvailable(release: UpdateChecker.Release) {
+        val size = Formatter.formatShortFileSize(this, release.sizeBytes)
+        val body = buildString {
+            append(getString(R.string.update_available_body, release.versionName, BuildConfig.VERSION_NAME, size))
+            if (release.notes.isNotEmpty()) append("\n\n").append(release.notes.take(600))
+        }
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.update_available_title)
+            .setMessage(body)
+            .setPositiveButton(R.string.update_now) { _, _ -> startUpdate(release) }
+            .setNegativeButton(R.string.later, null)
+            .show()
+    }
+
+    private fun startUpdate(release: UpdateChecker.Release) {
+        if (!Updater.canInstall(this)) {
+            // Without this Android silently refuses the install at the end of
+            // the download, which reads as the update simply not working.
+            MaterialAlertDialogBuilder(this)
+                .setTitle(R.string.install_source_title)
+                .setMessage(R.string.install_source_body)
+                .setPositiveButton(R.string.open_settings) { _, _ ->
+                    Updater.requestInstallPermission(this)
+                }
+                .setNegativeButton(android.R.string.cancel, null)
+                .show()
+            return
+        }
+
+        val progress = MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.update_available_title)
+            .setMessage(getString(R.string.downloading, 0))
+            .setCancelable(false)
+            .show()
+
+        lifecycleScope.launch {
+            val apk = Updater.download(this@MainActivity, release) { pct ->
+                runOnUiThread {
+                    progress.setMessage(
+                        if (pct < 0) getString(R.string.checking)
+                        else getString(R.string.downloading, pct)
+                    )
+                }
+            }
+            progress.dismiss()
+            if (apk == null) toast(getString(R.string.download_failed))
+            else Updater.install(this@MainActivity, apk)
+        }
+    }
+
+    private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_LONG).show()
 
     private fun showWelcome() {
         MaterialAlertDialogBuilder(this)

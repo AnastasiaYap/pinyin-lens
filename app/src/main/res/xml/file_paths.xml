@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The downloaded APK lives in cache and is shared read-only with the
+     system installer through FileProvider; a raw file:// URI would throw
+     FileUriExposedException. -->
+<paths>
+    <cache-path name="updates" path="updates/" />
+</paths>

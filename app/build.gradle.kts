@@ -32,8 +32,11 @@ android {
         applicationId = "io.tr8.pinyinlens"
         minSdk = 26
         targetSdk = 36
-        versionCode = 6
-        versionName = "0.3.0"
+        versionCode = 7
+        versionName = "0.3.1"
+
+        // Where the updater looks for releases.
+        buildConfigField("String", "UPDATE_REPO", "\"AnastasiaYap/pinyin-lens\"")
     }
 
     buildTypes {
@@ -58,6 +61,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 

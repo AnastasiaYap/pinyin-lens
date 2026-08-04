@@ -54,5 +54,20 @@
     <string name="add_tile">Add Quick Settings tile</string>
     <string name="tile_added">Tile added to Quick Settings</string>
 
+    <string name="updates_title">Updates</string>
+    <string name="updates_summary">Check GitHub for a newer build when the app opens.</string>
+    <string name="check_updates">Check for updates now</string>
+    <string name="checking">Checking…</string>
+    <string name="up_to_date">You are on the latest version (%1$s).</string>
+    <string name="check_failed">Could not reach GitHub. Check your connection.</string>
+    <string name="update_available_title">Update available</string>
+    <string name="update_available_body">Version %1$s is available. You have %2$s.\n\nDownload size: %3$s</string>
+    <string name="update_now">Download and install</string>
+    <string name="later">Later</string>
+    <string name="downloading">Downloading %1$d%%</string>
+    <string name="download_failed">Download failed.</string>
+    <string name="install_source_title">Allow installs</string>
+    <string name="install_source_body">Android needs your permission before Pinyin Lens can install its own updates. Turn on "Allow from this source" on the next screen, then tap Download and install again.</string>
+    <string name="open_settings">Open settings</string>
     <string name="sample_text">我在银行工作，觉得还行。音乐让我快乐。</string>
 </resources>
