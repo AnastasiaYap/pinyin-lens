@@ -167,7 +167,7 @@ def main():
     if han_count != annotated:
         failures.append(("coverage", f"{han_count} han", f"{annotated} annotated"))
 
-    for name in ("chars.txt", "words.txt"):
+    for name in ("chars.txt", "words.txt", "defs.txt"):
         problem = check_sort_order(name)
         if problem:
             failures.append((name, "sorted for binary search", problem))

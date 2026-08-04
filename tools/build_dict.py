@@ -16,6 +16,10 @@ Outputs (UTF-8, sorted in UTF-16 code-unit order so Kotlin's String.compareTo
 can binary-search them directly):
   app/src/main/assets/chars.txt   char <TAB> pinyin
   app/src/main/assets/words.txt   word [<TAB> space-separated pinyin]
+  app/src/main/assets/defs.txt    word <TAB> first English sense
+
+defs.txt is loaded lazily and only by the highlight sheet, so the overlay
+service never pays for it.
 """
 
 import gzip
@@ -108,6 +112,39 @@ def load_chars() -> dict[str, str]:
     return chars
 
 
+MAX_GLOSS = 48
+
+
+def load_defs(text: str) -> dict[str, str]:
+    """Headword -> first English sense, for tap-to-define in the sheet."""
+    defs: dict[str, str] = {}
+    for line in text.splitlines():
+        if line.startswith("#") or not line.strip():
+            continue
+        head, _, rest = line.partition(" [")
+        _, _, gloss = rest.partition("] ")
+        try:
+            trad, simp = head.split(" ", 1)
+        except ValueError:
+            continue
+
+        senses = [g for g in gloss.strip("/").split("/") if g]
+        if not senses:
+            continue
+        # Skip the cross-reference-only entries; they define nothing on their own.
+        first = next(
+            (g for g in senses if not g.startswith(("variant of", "see ", "old variant"))),
+            senses[0],
+        )
+        if len(first) > MAX_GLOSS:
+            first = first[: MAX_GLOSS - 1].rstrip() + "\u2026"
+
+        for form in {simp, trad}:
+            if all_han(form) and 1 <= len(form) <= MAX_WORD_LEN and form not in defs:
+                defs[form] = first
+    return defs
+
+
 def load_words(chars: dict[str, str]) -> dict[str, str]:
     """Maps headword -> reading, or headword -> "" when the reading is implied."""
     blob = fetch(CEDICT_URL, "cedict.txt.gz")
@@ -180,8 +217,11 @@ def main() -> None:
     ASSETS.mkdir(parents=True, exist_ok=True)
     chars = load_chars()
     words = load_words(chars)
+    cedict = gzip.decompress(fetch(CEDICT_URL, "cedict.txt.gz")).decode("utf-8")
+    defs = load_defs(cedict)
     write(ASSETS / "chars.txt", chars)
     write(ASSETS / "words.txt", words)
+    write(ASSETS / "defs.txt", defs)
 
 
 if __name__ == "__main__":

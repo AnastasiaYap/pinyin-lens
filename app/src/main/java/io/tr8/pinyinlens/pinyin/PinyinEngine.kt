@@ -54,13 +54,17 @@ object PinyinEngine {
         }
     }
 
-    suspend fun annotate(context: Context, text: String): List<RubyToken> {
+    suspend fun annotate(
+        context: Context,
+        text: String,
+        thirdToneSandhi: Boolean = false,
+    ): List<RubyToken> {
         load(context)
-        return annotateLoaded(text)
+        return annotateLoaded(text, thirdToneSandhi)
     }
 
     /** Synchronous variant for callers that have already awaited [load]. */
-    fun annotateLoaded(text: String): List<RubyToken> {
+    fun annotateLoaded(text: String, thirdToneSandhi: Boolean = false): List<RubyToken> {
         val charTable = chars ?: return listOf(RubyToken(text, null))
         val wordTable = words ?: return listOf(RubyToken(text, null))
 
@@ -98,7 +102,9 @@ object PinyinEngine {
         }
         flushHan()
         flushPlain()
-        return out
+        // Sandhi runs over the finished sequence: the rules look across word
+        // boundaries, so they cannot be applied while segmenting.
+        return Sandhi.apply(out, thirdToneSandhi) { base -> charTable.value(base) }
     }
 
     private fun annotateHanRun(

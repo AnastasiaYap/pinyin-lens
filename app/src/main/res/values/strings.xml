@@ -33,6 +33,16 @@
     <string name="action_overlay">Screen</string>
     <string name="action_selection">Select</string>
     <string name="a11y_description">Reads the text on screen so it can be redrawn with pinyin above each character.</string>
+    <string name="speech_title">Tap to hear</string>
+    <string name="speech_summary">Tap a word in the sheet to hear it read aloud, using your phone\'s text-to-speech.</string>
+    <string name="speech_unavailable">Chinese text-to-speech is not available on this phone.</string>
+    <string name="speak_all">Read aloud</string>
+
+    <string name="sandhi_title">Show tone changes</string>
+    <string name="sandhi_summary">Third tone before another third tone is spoken as a second (你好 as ní hǎo). The 不 and 一 changes are always shown.</string>
+
+    <string name="definition_hint">Tap a word for its meaning.</string>
+    <string name="no_definition">%1$s — no dictionary entry.</string>
     <string name="size_title">Highlight text size</string>
     <string name="size_summary">Character size in the sheet you get after tapping Pinyin.</string>
     <string name="overlay_size_title">Whole screen card size</string>

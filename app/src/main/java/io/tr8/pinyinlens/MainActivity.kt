@@ -36,7 +36,9 @@ import io.tr8.pinyinlens.toggle.Prefs.autoUpdateCheck
 import io.tr8.pinyinlens.toggle.Prefs.notificationEnabled
 import io.tr8.pinyinlens.toggle.Prefs.overlayScalePercent
 import io.tr8.pinyinlens.toggle.Prefs.onboarded
+import io.tr8.pinyinlens.toggle.Prefs.speechEnabled
 import io.tr8.pinyinlens.toggle.Prefs.textSizeSp
+import io.tr8.pinyinlens.toggle.Prefs.thirdToneSandhi
 import io.tr8.pinyinlens.toggle.Prefs.toneColors
 import io.tr8.pinyinlens.toggle.PinyinTileService
 import kotlinx.coroutines.Dispatchers
@@ -121,6 +123,18 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
+        binding.speechSwitch.setOnCheckedChangeListener { button, checked ->
+            if (!button.isPressed) return@setOnCheckedChangeListener
+            speechEnabled = checked
+        }
+
+        binding.sandhiSwitch.setOnCheckedChangeListener { button, checked ->
+            if (!button.isPressed) return@setOnCheckedChangeListener
+            thirdToneSandhi = checked
+            renderPreview(binding.sample.text?.toString().orEmpty())
+            PinyinAccessibilityService.instance?.onSandhiChanged()
+        }
+
         binding.grantAccessibility.setOnClickListener { showOverlaySetup() }
 
         binding.autoUpdateSwitch.setOnCheckedChangeListener { button, checked ->
@@ -192,6 +206,8 @@ class MainActivity : AppCompatActivity() {
         binding.toneSwitch.isChecked = toneColors
         binding.preview.toneColors = toneColors
         binding.autoUpdateSwitch.isChecked = autoUpdateCheck
+        binding.speechSwitch.isChecked = speechEnabled
+        binding.sandhiSwitch.isChecked = thirdToneSandhi
         binding.sizeSlider.value = textSizeSp
         binding.overlaySizeSlider.value = overlayScalePercent
         binding.preview.baseTextSizeSp = textSizeSp
@@ -392,7 +408,7 @@ class MainActivity : AppCompatActivity() {
         previewJob?.cancel()
         previewJob = lifecycleScope.launch {
             val tokens = withContext(Dispatchers.Default) {
-                PinyinEngine.annotate(this@MainActivity, text)
+                PinyinEngine.annotate(this@MainActivity, text, thirdToneSandhi)
             }
             binding.preview.tokens = tokens
         }

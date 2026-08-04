@@ -96,6 +96,32 @@ class RubyLayout(
         }
     }
 
+    /**
+     * The segmented word drawn at ([x], [y]), or null if that point is not on
+     * an annotated character. Word membership comes from the same startsWord
+     * flags the layout already uses, so a tap resolves to 银行 rather than 行.
+     */
+    fun wordAt(measured: Measured, x: Float, y: Float, left: Float, top: Float): String? {
+        val lineIndex = ((y - top) / measured.lineHeight).toInt()
+        val line = measured.lines.getOrNull(lineIndex) ?: return null
+
+        var cursor = left
+        var hit = -1
+        for ((index, cell) in line.withIndex()) {
+            val advance = cell.advance(index == 0)
+            if (x >= cursor && x < cursor + advance) { hit = index; break }
+            cursor += advance
+        }
+        if (hit < 0 || line[hit].ruby == null) return null
+
+        var start = hit
+        while (start > 0 && !line[start].startsWord && line[start - 1].ruby != null) start--
+        var end = hit
+        while (end + 1 < line.size && !line[end + 1].startsWord && line[end + 1].ruby != null) end++
+
+        return buildString { for (i in start..end) append(line[i].text) }
+    }
+
     // --- internals --------------------------------------------------------
 
     private fun buildCells(tokens: List<RubyToken>): List<RubyCell> {

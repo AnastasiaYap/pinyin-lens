@@ -1,10 +1,13 @@
 package io.tr8.pinyinlens.ui
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Canvas
 import android.graphics.Paint
 import android.util.AttributeSet
 import android.util.TypedValue
+import android.view.GestureDetector
+import android.view.MotionEvent
 import android.view.View
 import androidx.core.content.ContextCompat
 import io.tr8.pinyinlens.R
@@ -105,6 +108,37 @@ class RubyTextView @JvmOverloads constructor(
             resolveSize(ceil(result.width).toInt() + paddingLeft + paddingRight, widthMeasureSpec),
             resolveSize(ceil(result.height).toInt() + paddingTop + paddingBottom, heightMeasureSpec),
         )
+    }
+
+    /** Invoked with the segmented word under a tap, when there is one. */
+    var onWordTap: ((String) -> Unit)? = null
+        set(value) {
+            field = value
+            isClickable = value != null
+        }
+
+    private val tapDetector = GestureDetector(
+        context,
+        object : GestureDetector.SimpleOnGestureListener() {
+            override fun onDown(e: MotionEvent) = onWordTap != null
+            override fun onSingleTapUp(e: MotionEvent): Boolean {
+                val listener = onWordTap ?: return false
+                val result = measured ?: return false
+                val word = layout.wordAt(
+                    result, e.x, e.y, paddingLeft.toFloat(), paddingTop.toFloat(),
+                ) ?: return false
+                listener(word)
+                return true
+            }
+        },
+    )
+
+    @SuppressLint("ClickableViewAccessibility")
+    override fun onTouchEvent(event: MotionEvent): Boolean {
+        if (onWordTap == null) return super.onTouchEvent(event)
+        // Returning true keeps the gesture, but a parent scroll view can still
+        // intercept once it becomes a drag, so scrolling is unaffected.
+        return tapDetector.onTouchEvent(event) || super.onTouchEvent(event)
     }
 
     override fun onDraw(canvas: Canvas) {

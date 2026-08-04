@@ -64,6 +64,8 @@ python3 tools/build_dict.py
 
 - `chars.txt` — 44,348 characters, from Unihan `kMandarin` (the preferred reading)
 - `words.txt` — 179,572 words, from CC-CEDICT
+- `defs.txt` — 193,956 English glosses, loaded lazily and only by the sheet, so
+  the always-resident overlay service never pays for them
 
 Every headword is kept, because the segmenter needs the whole vocabulary to
 find word boundaries. But only 19,731 of them carry a *reading*: the other
@@ -135,6 +137,13 @@ these:
 | Both dictionaries resident | 3.2 MB |
 | Whole-app Java heap, dictionaries loaded | ~20 MB PSS |
 | Debug APK / release APK | 8.3 MB / 2.7 MB |
+
+## Continuous integration
+
+`.github/workflows/ci.yml` runs the unit tests, lint, a debug build and the
+asset verification on every push. This matters more than usual here: the app
+updates itself from this repo's releases, so a broken build does not sit on a
+shelf — it reaches phones at the next launch.
 
 ## Tests
 
@@ -276,6 +285,11 @@ settings). The key is a self-signed RSA-4096, valid 30 years.
 no special permissions beyond notifications. Includes:
 
 - pinyin over each character, with context-correct polyphones
+- **tone sandhi**: 不 and 一 always, third-tone optionally. A dictionary stores
+  citation forms, so 不是 is listed `bù shì` though nobody says that — for a
+  reading aid the spoken form is the useful one
+- **tap a word for its meaning**, from the CC-CEDICT glosses
+- **tap to hear it**, via the system text-to-speech (off by default)
 - visual word grouping, and no line breaks mid-word
 - optional tone colouring, with separate light and dark palettes
 - two independent size controls: highlight sheet 12–48sp, whole-screen cards

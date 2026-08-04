@@ -13,6 +13,8 @@ object Prefs {
     private const val KEY_OVERLAY = "overlay_enabled"
     private const val KEY_ONBOARDED = "onboarded"
     private const val KEY_AUTO_UPDATE = "auto_update_check"
+    private const val KEY_SPEECH = "speech_enabled"
+    private const val KEY_THIRD_TONE = "third_tone_sandhi"
 
     const val TEXT_SIZE_MIN = 12f
     const val TEXT_SIZE_MAX = 48f
@@ -42,6 +44,19 @@ object Prefs {
     var Context.onboarded: Boolean
         get() = prefs(this).getBoolean(KEY_ONBOARDED, false)
         set(value) = prefs(this).edit { putBoolean(KEY_ONBOARDED, value) }
+
+    /** Tap a word to hear it, using the system text-to-speech engine. */
+    var Context.speechEnabled: Boolean
+        get() = prefs(this).getBoolean(KEY_SPEECH, false)
+        set(value) = prefs(this).edit { putBoolean(KEY_SPEECH, value) }
+
+    /**
+     * Show third-tone sandhi (你好 as ní hǎo). Off by default because
+     * dictionaries and most teaching material leave it unmarked.
+     */
+    var Context.thirdToneSandhi: Boolean
+        get() = prefs(this).getBoolean(KEY_THIRD_TONE, false)
+        set(value) = prefs(this).edit { putBoolean(KEY_THIRD_TONE, value) }
 
     /** Check GitHub for a newer release when the app opens. */
     var Context.autoUpdateCheck: Boolean

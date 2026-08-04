@@ -14,6 +14,7 @@ import io.tr8.pinyinlens.pinyin.PinyinEngine
 import io.tr8.pinyinlens.pinyin.RubyToken
 import io.tr8.pinyinlens.toggle.Overlay
 import io.tr8.pinyinlens.toggle.Prefs.overlayScalePercent
+import io.tr8.pinyinlens.toggle.Prefs.thirdToneSandhi
 import io.tr8.pinyinlens.toggle.Prefs.toneColors
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -127,6 +128,12 @@ class PinyinAccessibilityService : AccessibilityService() {
         overlay?.toneColors = toneColors
     }
 
+    fun onSandhiChanged() {
+        // Cached tokens carry the old readings.
+        cache.evictAll()
+        scheduleRefresh()
+    }
+
     fun onTextSizeChanged() {
         overlay?.sizeScale = currentSizeScale()
     }
@@ -156,7 +163,7 @@ class PinyinAccessibilityService : AccessibilityService() {
             val blocks = withContext(Dispatchers.Default) {
                 found.mapNotNull { (bounds, text) ->
                     val tokens = cache.get(text) ?: PinyinEngine.annotate(
-                        this@PinyinAccessibilityService, text,
+                        this@PinyinAccessibilityService, text, thirdToneSandhi,
                     ).also { cache.put(text, it) }
                     if (tokens.none { it.annotation != null }) null
                     else OverlayView.Block(bounds, tokens)
@@ -169,7 +176,10 @@ class PinyinAccessibilityService : AccessibilityService() {
     private fun collect(node: AccessibilityNodeInfo, out: MutableList<Pair<Rect, String>>) {
         if (out.size >= MAX_BLOCKS) return
 
-        val text = node.text?.toString()
+        // Plenty of views carry their content only in the description an image
+        // button, a canvas-drawn bubble - and those are invisible to `text`.
+        val text = node.text?.toString()?.takeIf { it.isNotBlank() }
+            ?: node.contentDescription?.toString()
         if (!text.isNullOrBlank() && containsHan(text) && node.isVisibleToUser) {
             val bounds = Rect()
             node.getBoundsInScreen(bounds)

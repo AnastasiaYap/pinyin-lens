@@ -14,9 +14,13 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.lifecycle.lifecycleScope
 import com.google.android.material.bottomsheet.BottomSheetDialog
 import io.tr8.pinyinlens.R
+import io.tr8.pinyinlens.pinyin.Definitions
 import io.tr8.pinyinlens.pinyin.PinyinEngine
 import io.tr8.pinyinlens.pinyin.RubyToken
+import io.tr8.pinyinlens.speech.Speaker
+import io.tr8.pinyinlens.toggle.Prefs.speechEnabled
 import io.tr8.pinyinlens.toggle.Prefs.textSizeSp
+import io.tr8.pinyinlens.toggle.Prefs.thirdToneSandhi
 import io.tr8.pinyinlens.toggle.Prefs.toneColors
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -35,6 +39,9 @@ class ProcessTextActivity : AppCompatActivity() {
     private lateinit var truncatedNotice: TextView
     private lateinit var copyButton: View
 
+    private lateinit var definition: TextView
+    private lateinit var speakButton: View
+    private var speaker: Speaker? = null
     private var dialog: BottomSheetDialog? = null
     private var annotateJob: Job? = null
     private var tokens: List<RubyToken> = emptyList()
@@ -61,12 +68,24 @@ class ProcessTextActivity : AppCompatActivity() {
         empty = view.findViewById(R.id.empty)
         truncatedNotice = view.findViewById(R.id.truncated)
         copyButton = view.findViewById(R.id.copy)
+        definition = view.findViewById(R.id.definition)
+        speakButton = view.findViewById(R.id.speak)
 
         rubyView.toneColors = toneColors
         rubyView.baseTextSizeSp = textSizeSp
         rubyView.baseTextColor = getColor(R.color.text_primary)
         rubyView.rubyTextColor = getColor(R.color.text_secondary)
         copyButton.setOnClickListener { copyPinyin() }
+
+        rubyView.onWordTap = { word -> onWordTapped(word) }
+
+        if (speechEnabled) {
+            speaker = Speaker(this) { toast(getString(R.string.speech_unavailable)) }
+            speakButton.visibility = View.VISIBLE
+            speakButton.setOnClickListener {
+                speaker?.speak(tokens.filter { it.annotation != null }.joinToString("") { it.base })
+            }
+        }
 
         dialog = BottomSheetDialog(this).apply {
             setContentView(view)
@@ -92,9 +111,27 @@ class ProcessTextActivity : AppCompatActivity() {
         bind(intent)
     }
 
+    private fun onWordTapped(word: String) {
+        if (speechEnabled) speaker?.speak(word)
+        lifecycleScope.launch {
+            val found = Definitions.lookupOrChar(this@ProcessTextActivity, word)
+            definition.text = when {
+                found == null -> getString(R.string.no_definition, word)
+                found.first == word -> "$word — ${found.second}"
+                // Fell back to the first character, so say which.
+                else -> "${found.first} — ${found.second}"
+            }
+            definition.visibility = View.VISIBLE
+        }
+    }
+
+    private fun toast(text: String) = Toast.makeText(this, text, Toast.LENGTH_LONG).show()
+
     override fun onDestroy() {
         // Clear the listener first: dismissing here would otherwise re-enter
         // finish() while the activity is already going away.
+        speaker?.release()
+        speaker = null
         dialog?.setOnDismissListener(null)
         dialog?.dismiss()
         dialog = null
@@ -112,6 +149,7 @@ class ProcessTextActivity : AppCompatActivity() {
         tokens = emptyList()
         progress.visibility = View.VISIBLE
         empty.visibility = View.GONE
+        definition.visibility = View.GONE
         rubyView.visibility = View.GONE
         copyButton.visibility = View.GONE
 
@@ -141,7 +179,7 @@ class ProcessTextActivity : AppCompatActivity() {
     private fun annotate(text: String) {
         annotateJob = lifecycleScope.launch {
             val result = withContext(Dispatchers.Default) {
-                PinyinEngine.annotate(this@ProcessTextActivity, text)
+                PinyinEngine.annotate(this@ProcessTextActivity, text, thirdToneSandhi)
             }
             tokens = result
             progress.visibility = View.GONE
@@ -152,6 +190,8 @@ class ProcessTextActivity : AppCompatActivity() {
                 rubyView.tokens = result
                 rubyView.visibility = View.VISIBLE
                 copyButton.visibility = View.VISIBLE
+                definition.setText(R.string.definition_hint)
+                definition.visibility = View.VISIBLE
             }
         }
     }

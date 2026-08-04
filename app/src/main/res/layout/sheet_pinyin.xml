@@ -43,6 +43,29 @@
             android:visibility="gone" />
     </androidx.core.widget.NestedScrollView>
 
+    <TextView
+        android:id="@+id/definition"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:textAppearance="?attr/textAppearanceBodyMedium"
+        android:visibility="gone" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="end"
+        android:orientation="horizontal">
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/speak"
+            style="@style/Widget.Material3.Button.TextButton"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:text="@string/speak_all"
+            android:visibility="gone" />
+
     <com.google.android.material.button.MaterialButton
         android:id="@+id/copy"
         style="@style/Widget.Material3.Button.TextButton"
@@ -51,5 +74,6 @@
         android:layout_gravity="end"
         android:layout_marginTop="8dp"
         android:text="@string/copy_pinyin" />
+    </LinearLayout>
 
 </LinearLayout>
