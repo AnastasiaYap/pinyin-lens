@@ -14,7 +14,7 @@
 
     <string name="help_button">How to use</string>
     <string name="welcome_title">How to use Pinyin Lens</string>
-    <string name="welcome_body"><![CDATA[There are two ways to read pinyin.<br/><br/><b>Highlight text</b><br/>Select any Chinese text, then tap <b>Pinyin</b> in the selection toolbar. On ColorOS it usually sits behind the <b>&#8942;</b> overflow button, next to Translate and Copy. The selection opens with pinyin above each character.<br/><br/><b>Whole screen</b><br/>Annotates every text block on screen with cards drawn over it. This one needs the Android accessibility permission — the app walks you through it. Text inside pictures, games and video subtitles cannot be read, so it stays unannotated.<br/><br/>Either mode can be switched on and off from the notification or the Quick Settings tile.]]></string>
+    <string name="welcome_body"><![CDATA[There are two ways to read pinyin.<br/><br/><b>Highlight text</b><br/>Select any Chinese text, then tap <b>Pinyin</b> in the selection toolbar. On ColorOS it usually sits behind the <b>&#8942;</b> overflow button, next to Translate and Copy. The selection opens with pinyin above each character.<br/><br/><b>Whole screen</b><br/>Annotates every text block on screen with cards drawn over it. This one needs the Android accessibility permission — the app walks you through it. Text inside pictures, games and video subtitles cannot be read, so it stays unannotated.<br/><br/>Either mode can be switched on and off from the notification or the Quick Settings tile.<br/><br/><b>Found a bug?</b><br/>Email <b>yy@yyhsk.com</b> — there is a Report a bug button at the bottom of this screen that fills in your version and device.]]></string>
 
     <string name="regrant_title">Whole screen needs permission again</string>
     <string name="regrant_text">The update cleared the accessibility permission. Tap to switch Pinyin Lens back on.</string>
@@ -56,6 +56,13 @@
     <string name="tile_hint">Add the Pinyin Lens tile to Quick Settings for a one-tap toggle from any app.</string>
     <string name="add_tile">Add Quick Settings tile</string>
     <string name="tile_added">Tile added to Quick Settings</string>
+
+    <string name="feedback_title">Found a bug?</string>
+    <string name="feedback_summary">Email yy@yyhsk.com with what happened and which app you were in. Tapping below fills in your version and device for you.</string>
+    <string name="feedback_button">Report a bug</string>
+    <string name="feedback_email">yy@yyhsk.com</string>
+    <string name="feedback_subject">Pinyin Lens %1$s — bug report</string>
+    <string name="feedback_no_email">No email app found. Please write to yy@yyhsk.com.</string>
 
     <string name="updates_title">Updates</string>
     <string name="updates_summary">Check GitHub for a newer build when the app opens.</string>

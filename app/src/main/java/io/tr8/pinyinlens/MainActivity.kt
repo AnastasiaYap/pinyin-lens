@@ -7,6 +7,7 @@ import android.content.Intent
 import android.provider.Settings
 import android.text.format.Formatter
 import android.graphics.drawable.Icon
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.text.Editable
@@ -127,6 +128,7 @@ class MainActivity : AppCompatActivity() {
             autoUpdateCheck = checked
         }
         binding.checkUpdates.setOnClickListener { checkForUpdates(manual = true) }
+        binding.reportBug.setOnClickListener { reportBug() }
         binding.helpButton.setOnClickListener { showWelcome() }
 
         binding.sizeSlider.apply {
@@ -228,6 +230,30 @@ class MainActivity : AppCompatActivity() {
             if (result == StatusBarManager.TILE_ADD_REQUEST_RESULT_TILE_ADDED) {
                 Toast.makeText(this, R.string.tile_added, Toast.LENGTH_SHORT).show()
             }
+        }
+    }
+
+    /**
+     * Opens an email with the details that make a report actionable — version,
+     * device, Android release, and which modes were on — so the reporter does
+     * not have to know to include them.
+     */
+    private fun reportBug() {
+        val body = buildString {
+            append("\n\n---\n")
+            append("Version: ${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})\n")
+            append("Device: ${Build.MANUFACTURER} ${Build.MODEL}\n")
+            append("Android: ${Build.VERSION.RELEASE} (API ${Build.VERSION.SDK_INT})\n")
+            append("Selection mode: ${if (Lens.isEnabled(this@MainActivity)) "on" else "off"}\n")
+            append("Whole screen: ${if (Overlay.isActive(this@MainActivity)) "on" else "off"}\n")
+        }
+        val intent = Intent(Intent.ACTION_SENDTO).apply {
+            data = Uri.parse("mailto:" + getString(R.string.feedback_email))
+            putExtra(Intent.EXTRA_SUBJECT, getString(R.string.feedback_subject, BuildConfig.VERSION_NAME))
+            putExtra(Intent.EXTRA_TEXT, body)
+        }
+        if (runCatching { startActivity(intent) }.isFailure) {
+            toast(getString(R.string.feedback_no_email))
         }
     }
 

@@ -32,8 +32,8 @@ android {
         applicationId = "io.tr8.pinyinlens"
         minSdk = 26
         targetSdk = 36
-        versionCode = 9
-        versionName = "0.3.3"
+        versionCode = 10
+        versionName = "0.3.4"
 
         // Where the updater looks for releases.
         buildConfigField("String", "UPDATE_REPO", "\"AnastasiaYap/pinyin-lens\"")

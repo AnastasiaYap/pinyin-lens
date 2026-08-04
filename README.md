@@ -209,6 +209,13 @@ not bugs to be fixed later:
 Selection mode is independent of all this and keeps working if you leave the
 overlay off.
 
+## Reporting bugs
+
+Email **yy@yyhsk.com**. The app has a **Report a bug** button at the bottom of
+its settings screen which opens a message pre-filled with the version, device,
+Android release and which modes were on — the things a report is useless
+without.
+
 ## Updates
 
 The app checks this repository's releases on launch (switchable) and on demand
