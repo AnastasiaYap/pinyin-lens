@@ -185,6 +185,34 @@ not bugs to be fixed later:
 Selection mode is independent of all this and keeps working if you leave the
 overlay off.
 
+## Updates
+
+The app checks this repository's releases on launch (switchable) and on demand
+from **Check for updates now**. If a newer tag exists it offers the release
+APK, downloads it, and hands it to the system installer.
+
+It cannot install silently, and no sideloaded app can: only a device owner or
+system app may install packages without confirmation, so you tap **Update** at
+the end. The install also fails unless the download carries the same signing
+key as the installed app — which is precisely what stops a substituted APK
+taking over the package, so it is a feature rather than an obstacle.
+
+Android additionally requires this app to be allowed as an install source. The
+updater checks that *before* downloading and explains it, rather than failing
+at the end of a download.
+
+Publishing a new version:
+
+```
+./build.sh assembleRelease
+gh release create v0.4.0 app/build/outputs/apk/release/app-release.apk \
+  --title "Pinyin Lens 0.4.0" --notes "..."
+```
+
+The updater picks the first `.apk` asset that is not a debug build, compares
+the tag against the installed `versionName` numerically (so 0.10.0 correctly
+beats 0.9.0), and shows the release notes in the prompt.
+
 ## Installing on the phone
 
 Built APKs land in `dist/`. No native code, so one APK covers every ABI;
