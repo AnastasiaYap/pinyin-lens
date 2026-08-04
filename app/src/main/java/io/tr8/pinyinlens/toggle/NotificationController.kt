@@ -29,6 +29,7 @@ object NotificationController {
 
     private const val CHANNEL_ID = "lens_toggle"
     private const val NOTIFICATION_ID = 1
+    private const val REGRANT_ID = 2
 
     fun refresh(context: Context) {
         if (context.notificationEnabled) post(context) else cancel(context)
@@ -76,6 +77,44 @@ object NotificationController {
             .build()
 
         NotificationManagerCompat.from(context).notify(NOTIFICATION_ID, notification)
+    }
+
+    /**
+     * Posted when an update has cleared the accessibility grant. Without it the
+     * overlay simply stops working and nothing says why.
+     */
+    @SuppressLint("MissingPermission")
+    fun postRegrantNeeded(context: Context) {
+        if (!canPost(context)) return
+        ensureChannel(context)
+
+        val intent = Intent(context, MainActivity::class.java)
+            .setAction(MainActivity.ACTION_REGRANT)
+            .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
+        val pending = PendingIntent.getActivity(
+            context, 5, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE,
+        )
+
+        val notification = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.drawable.ic_notification)
+            .setContentTitle(context.getString(R.string.regrant_title))
+            .setContentText(context.getString(R.string.regrant_text))
+            .setStyle(
+                NotificationCompat.BigTextStyle()
+                    .bigText(context.getString(R.string.regrant_text))
+            )
+            .setContentIntent(pending)
+            .setAutoCancel(true)
+            .setSilent(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .build()
+
+        NotificationManagerCompat.from(context).notify(REGRANT_ID, notification)
+    }
+
+    fun cancelRegrantNeeded(context: Context) {
+        NotificationManagerCompat.from(context).cancel(REGRANT_ID)
     }
 
     fun cancel(context: Context) {

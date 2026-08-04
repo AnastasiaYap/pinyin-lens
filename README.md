@@ -181,9 +181,30 @@ not bugs to be fixed later:
   redraws nothing at all.
 - Text that isn't a text node — canvas drawing, games, video subtitles, text
   inside images — cannot be seen at all and stays unannotated.
-- ColorOS may revoke the accessibility grant on reboot or under battery
-  management. The grant is re-read from the system on every check rather than
-  cached, so the app reports the truth, but you may have to re-enable it.
+- **The grant is often cleared by an app update.** Verified on stock Android 16
+  that an in-place update *keeps* it, so this is device behaviour: ColorOS
+  revokes accessibility on update, and Android 13+ re-arms its
+  restricted-settings block because each sideloaded install counts as a new
+  unknown-source install.
+
+  No app can restore this itself — there is no API to enable your own
+  accessibility service, deliberately, because that is exactly what malware
+  would use. What the app does instead is notice: after an update it posts a
+  notification and shows a dialog explaining the fix, with a button that jumps
+  to the accessibility list (where Pinyin Lens appears first under *Downloaded
+  apps*). If the toggle is greyed out, that is the restricted-settings block:
+  Settings → Apps → Pinyin Lens → ⋮ → Allow restricted settings.
+
+  From a computer, this re-grants it in one step without touching Settings:
+
+  ```
+  adb shell settings put secure enabled_accessibility_services \
+    io.tr8.pinyinlens/io.tr8.pinyinlens.overlay.PinyinAccessibilityService
+  adb shell settings put secure accessibility_enabled 1
+  ```
+
+  The permanent fix is distribution rather than code: an app installed from a
+  source Android trusts is not subject to the restricted-settings gate.
 
 Selection mode is independent of all this and keeps working if you leave the
 overlay off.

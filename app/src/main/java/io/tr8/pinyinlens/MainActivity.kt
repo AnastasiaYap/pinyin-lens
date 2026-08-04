@@ -25,6 +25,7 @@ import io.tr8.pinyinlens.databinding.ActivityMainBinding
 import io.tr8.pinyinlens.pinyin.PinyinEngine
 import io.tr8.pinyinlens.update.UpdateChecker
 import io.tr8.pinyinlens.update.Updater
+import io.tr8.pinyinlens.overlay.AccessibilitySettings
 import io.tr8.pinyinlens.overlay.PinyinAccessibilityService
 import io.tr8.pinyinlens.toggle.Lens
 import io.tr8.pinyinlens.toggle.Overlay
@@ -49,6 +50,7 @@ class MainActivity : AppCompatActivity() {
 
     /** Set when we send the user to settings, so we can finish on their return. */
     private var awaitingGrant = false
+    private var regrantShown = false
 
     private val notificationPermission = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
@@ -198,6 +200,7 @@ class MainActivity : AppCompatActivity() {
             requestNotificationPermission()
         }
         val granted = Overlay.isServiceGranted(this)
+        if (granted) NotificationController.cancelRegrantNeeded(this)
         if (awaitingGrant && granted) {
             // They went to settings from the dialog and granted it; finish the
             // job rather than making them find the switch again.
@@ -209,6 +212,8 @@ class MainActivity : AppCompatActivity() {
         binding.grantAccessibility.visibility = if (granted) View.GONE else View.VISIBLE
 
         NotificationController.refresh(this)
+        // Only once per visit, or dismissing it would bring it straight back.
+        if (!regrantShown && Overlay.needsRegrant(this)) showRegrantNeeded()
         renderPreview(binding.sample.text?.toString().orEmpty())
     }
 
@@ -324,10 +329,24 @@ class MainActivity : AppCompatActivity() {
             .show()
     }
 
-    private fun openAccessibilitySettings() {
-        runCatching {
-            startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
-        }
+    private fun openAccessibilitySettings() = AccessibilitySettings.open(this)
+
+    private fun showRegrantNeeded() {
+        regrantShown = true
+        NotificationController.cancelRegrantNeeded(this)
+        MaterialAlertDialogBuilder(this)
+            .setTitle(R.string.regrant_title)
+            .setMessage(
+                HtmlCompat.fromHtml(
+                    getString(R.string.regrant_dialog_body), HtmlCompat.FROM_HTML_MODE_COMPACT,
+                )
+            )
+            .setPositiveButton(R.string.overlay_setup_open) { _, _ ->
+                awaitingGrant = true
+                openAccessibilitySettings()
+            }
+            .setNegativeButton(R.string.later, null)
+            .show()
     }
 
     private fun requestNotificationPermission() {
@@ -336,8 +355,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private companion object {
-        const val STATE_AWAITING_GRANT = "awaiting_grant"
+    companion object {
+        /** Set by the notification posted when an update clears the grant. */
+        const val ACTION_REGRANT = "io.tr8.pinyinlens.REGRANT"
+
+        private const val STATE_AWAITING_GRANT = "awaiting_grant"
     }
 
     private fun renderPreview(text: String) {

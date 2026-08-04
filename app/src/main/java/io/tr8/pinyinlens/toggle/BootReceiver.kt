@@ -17,7 +17,14 @@ class BootReceiver : BroadcastReceiver() {
         when (intent.action) {
             Intent.ACTION_BOOT_COMPLETED,
             Intent.ACTION_MY_PACKAGE_REPLACED,
-            -> NotificationController.refresh(context)
+            -> {
+                NotificationController.refresh(context)
+                // An update can clear the accessibility grant. Say so rather
+                // than letting the overlay quietly stop working.
+                if (Overlay.needsRegrant(context)) {
+                    NotificationController.postRegrantNeeded(context)
+                }
+            }
         }
     }
 }

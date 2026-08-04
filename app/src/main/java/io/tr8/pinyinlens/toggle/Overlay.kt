@@ -35,6 +35,15 @@ object Overlay {
     /** Whether the user wants the overlay on. Meaningless without the grant. */
     fun isEnabled(context: Context): Boolean = context.overlayEnabled
 
+    /**
+     * The user asked for the overlay but the system grant is gone — typically
+     * after an app update, which some OEMs and Android's restricted-settings
+     * gate treat as fresh consent. The preference is deliberately left on, so
+     * the app can tell this apart from the user simply switching it off.
+     */
+    fun needsRegrant(context: Context): Boolean =
+        isEnabled(context) && !isServiceGranted(context)
+
     fun isActive(context: Context): Boolean =
         isEnabled(context) && isServiceGranted(context) && PinyinAccessibilityService.isRunning
 
