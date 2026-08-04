@@ -1,0 +1,17 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="#FFFFFF">
+    <!-- A short pinyin stroke over a character block: the lens in miniature. -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M6,4h12v2h-12z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M4,9h16v11h-16zM6,11v7h12v-7z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M11,12h2v5h-2zM8.5,13.5h7v2h-7z" />
+</vector>

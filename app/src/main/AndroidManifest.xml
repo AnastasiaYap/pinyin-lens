@@ -1,0 +1,100 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
+
+    <application
+        android:name=".PinyinLensApp"
+        android:allowBackup="true"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:supportsRtl="true"
+        android:theme="@style/Theme.PinyinLens">
+
+        <activity
+            android:name=".MainActivity"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <!--
+            The selection-menu entry. Toggling the lens off disables this
+            component, which is what makes "Pinyin" appear in and disappear
+            from the text-selection toolbar system-wide.
+        -->
+        <!--
+            No taskAffinity override here. An editable field invokes this via
+            startActivityForResult, and forcing a separate task breaks that
+            contract — the host cancels the result and the sheet can fail to
+            surface. Read-only text (a web page) uses plain startActivity and
+            is unaffected, which is why the browser worked and a text box did
+            not.
+
+            stateAlwaysHidden drops the IME on the way in, so the sheet isn't
+            covered by a keyboard that was already open.
+        -->
+        <activity
+            android:name=".ui.ProcessTextActivity"
+            android:enabled="true"
+            android:excludeFromRecents="true"
+            android:exported="true"
+            android:label="@string/process_text_label"
+            android:theme="@style/Theme.PinyinLens.Transparent"
+            android:windowSoftInputMode="stateAlwaysHidden|adjustNothing">
+            <intent-filter>
+                <action android:name="android.intent.action.PROCESS_TEXT" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="text/plain" />
+            </intent-filter>
+        </activity>
+
+        <receiver
+            android:name=".toggle.ToggleReceiver"
+            android:exported="false" />
+
+        <receiver
+            android:name=".toggle.BootReceiver"
+            android:enabled="true"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED" />
+            </intent-filter>
+        </receiver>
+
+        <!--
+            The whole-screen overlay. BIND_ACCESSIBILITY_SERVICE means only the
+            system can bind this, and the user must grant it by hand in
+            Accessibility settings — Android 13+ additionally hides that behind
+            "restricted settings" for sideloaded apps.
+        -->
+        <service
+            android:name=".overlay.PinyinAccessibilityService"
+            android:exported="true"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
+            <intent-filter>
+                <action android:name="android.accessibilityservice.AccessibilityService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.accessibilityservice"
+                android:resource="@xml/accessibility_service_config" />
+        </service>
+
+        <service
+            android:name=".toggle.PinyinTileService"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/app_name"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+        </service>
+
+    </application>
+</manifest>

@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Pinyin Lens</string>
+    <string name="process_text_label">Pinyin</string>
+
+    <string name="lens_title">Pinyin lens</string>
+    <string name="lens_summary">Adds \"Pinyin\" to the text-selection menu. Highlight Chinese anywhere, tap it, and read the selection with pinyin above each character.</string>
+
+    <string name="notification_title">Notification toggle</string>
+    <string name="notification_summary">Keep a persistent notification with an on/off button.</string>
+
+    <string name="tone_title">Colour by tone</string>
+    <string name="tone_summary">Red 1, orange 2, green 3, blue 4, grey neutral.</string>
+
+    <string name="help_button">How to use</string>
+    <string name="welcome_title">How to use Pinyin Lens</string>
+    <string name="welcome_body"><![CDATA[There are two ways to read pinyin.<br/><br/><b>Highlight text</b><br/>Select any Chinese text, then tap <b>Pinyin</b> in the selection toolbar. On ColorOS it usually sits behind the <b>&#8942;</b> overflow button, next to Translate and Copy. The selection opens with pinyin above each character.<br/><br/><b>Whole screen</b><br/>Annotates every text block on screen with cards drawn over it. This one needs the Android accessibility permission — the app walks you through it. Text inside pictures, games and video subtitles cannot be read, so it stays unannotated.<br/><br/>Either mode can be switched on and off from the notification or the Quick Settings tile.]]></string>
+
+    <string name="overlay_setup_title">Turn on whole screen</string>
+    <string name="overlay_setup_body"><![CDATA[Whole screen needs the Android accessibility permission, because reading the text on screen is the only way to know what to annotate. Pinyin Lens only reads text — it does not record or send anything.<br/><br/><b>1.</b>&#160;Tap <b>Open settings</b> below.<br/><b>2.</b>&#160;Under <b>Downloaded apps</b> (or <b>Installed services</b>), choose <b>Pinyin Lens</b>.<br/><b>3.</b>&#160;Switch it on and accept the prompt.<br/><b>4.</b>&#160;Come back here — whole screen switches itself on.<br/><br/><b>If Android says the setting is restricted</b><br/>That happens with sideloaded apps. Go to Settings → Apps → Pinyin Lens → <b>&#8942;</b> (top right) → <b>Allow restricted settings</b>, then try again.<br/><br/><b>On ColorOS</b><br/>Also allow auto-start and remove battery restrictions for Pinyin Lens, or the system may switch the service off later.]]></string>
+
+    <string name="overlay_setup_open">Open settings</string>
+    <string name="overlay_enabled_toast">Whole screen is on</string>
+    <string name="got_it">Got it</string>
+
+    <string name="overlay_title">Whole screen</string>
+    <string name="overlay_summary">Annotates every text block on screen with cards drawn over it. Needs the accessibility service. Text drawn as graphics — games, video subtitles, pictures — cannot be read and stays unannotated.</string>
+    <string name="overlay_grant">Grant accessibility access</string>
+    <string name="overlay_on">Whole screen on</string>
+    <string name="action_overlay">Screen</string>
+    <string name="action_selection">Select</string>
+    <string name="a11y_description">Reads the text on screen so it can be redrawn with pinyin above each character.</string>
+    <string name="size_title">Highlight text size</string>
+    <string name="size_summary">Character size in the sheet you get after tapping Pinyin.</string>
+    <string name="overlay_size_title">Whole screen card size</string>
+    <string name="overlay_size_summary">Scales the cards relative to the text they cover, so a caption stays smaller than body text. Turn it down to make cards spill less onto what is underneath.</string>
+    <string name="preview_title">Try it</string>
+    <string name="truncated">Long selection — showing the first %1$d characters only.</string>
+    <string name="preview_hint">Type or paste Chinese</string>
+
+    <string name="notification_on">On — highlight text and tap Pinyin</string>
+    <string name="notification_off">Off — Pinyin hidden from the selection menu</string>
+    <string name="action_hide">Hide</string>
+
+    <string name="channel_toggle">Lens toggle</string>
+    <string name="channel_toggle_description">The persistent on/off control.</string>
+
+    <string name="copy_pinyin">Copy pinyin</string>
+    <string name="copied">Pinyin copied</string>
+    <string name="no_text_received">No text was passed to Pinyin Lens.</string>
+    <string name="no_chinese">No Chinese characters in the selection.</string>
+
+    <string name="tile_hint">Add the Pinyin Lens tile to Quick Settings for a one-tap toggle from any app.</string>
+    <string name="add_tile">Add Quick Settings tile</string>
+    <string name="tile_added">Tile added to Quick Settings</string>
+
+    <string name="sample_text">我在银行工作，觉得还行。音乐让我快乐。</string>
+</resources>

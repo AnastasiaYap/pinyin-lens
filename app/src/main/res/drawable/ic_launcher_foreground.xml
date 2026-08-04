@@ -1,0 +1,36 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!--
+        The mark is the app in miniature: a pinyin stroke floating above a
+        character frame.
+
+        Content spans 34x41 and is translated so its centre lands on (54,54).
+        Every corner then sits within 27 of the centre, inside the 66dp circle
+        a round launcher mask cuts to, so nothing clips.
+    -->
+    <group android:translateX="31" android:translateY="30.5">
+
+        <!-- pinyin: a short bar with rounded ends, sitting like a tone mark -->
+        <path
+            android:fillColor="@color/accent"
+            android:pathData="M15,3 h16 a3,3 0 0 1 0,6 h-16 a3,3 0 0 1 0,-6 z" />
+
+        <!--
+            Character frame. The second subpath winds counter-clockwise against
+            the first, so non-zero fill leaves it hollow.
+        -->
+        <path
+            android:fillColor="@color/text_primary"
+            android:pathData="M10,14 h26 a4,4 0 0 1 4,4 v22 a4,4 0 0 1 -4,4 h-26 a4,4 0 0 1 -4,-4 v-22 a4,4 0 0 1 4,-4 z
+                              M11,20 v18 h24 v-18 z" />
+
+        <!-- 十 inside the frame -->
+        <path
+            android:fillColor="@color/text_primary"
+            android:pathData="M21,22 h4 v14 h-4 z
+                              M15,27 h16 v4 h-16 z" />
+    </group>
+</vector>

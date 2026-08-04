@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="text_primary">#ECECEE</color>
+    <color name="text_secondary">#A9A9B0</color>
+    <color name="ic_launcher_background">#1B1D22</color>
+
+    <!-- Lifted and desaturated: the light-theme tones are too dark to read
+         against a dark sheet, blue worst of all. -->
+    <color name="tone_1">#FF8A80</color>
+    <color name="tone_2">#F5C066</color>
+    <color name="tone_3">#7FD8A0</color>
+    <color name="tone_4">#8AB4F8</color>
+    <color name="tone_neutral">#B0B0B8</color>
+
+    <!-- Overlay cards sit on top of the host app, so they are opaque. -->
+    <color name="overlay_card">#1E2026</color>
+    <color name="overlay_card_border">#3A3D45</color>
+</resources>

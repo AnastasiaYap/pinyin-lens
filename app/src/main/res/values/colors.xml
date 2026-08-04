@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="accent">#3B6FD4</color>
+    <color name="text_primary">#1A1A1A</color>
+    <color name="text_secondary">#6B6B70</color>
+    <color name="ic_launcher_background">#F2F4F8</color>
+
+    <!-- Tone colours, in the convention learners know from MDBG/Pleco. -->
+    <color name="tone_1">#D64545</color>
+    <color name="tone_2">#C67A1E</color>
+    <color name="tone_3">#2E8B57</color>
+    <color name="tone_4">#3B6FD4</color>
+    <color name="tone_neutral">#8A8A8E</color>
+
+    <!-- Overlay cards sit on top of the host app, so they are opaque. -->
+    <color name="overlay_card">#F7F5FA</color>
+    <color name="overlay_card_border">#D6D2DE</color>
+</resources>
