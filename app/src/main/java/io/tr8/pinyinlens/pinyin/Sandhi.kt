@@ -19,6 +19,17 @@ object Sandhi {
     private const val ORDINAL_PREFIX = "第"
 
     /**
+     * 一 only changes tone when it means "one of something". Next to these it
+     * is a numeral being read out, and keeps its citation tone: 一月 is January,
+     * not "one month", and 一二三 is counting aloud.
+     */
+    private val DATE_UNITS = setOf("月", "日", "号", "號")
+    private val DIGITS = setOf(
+        "一", "二", "三", "四", "五", "六", "七", "八", "九", "十",
+        "两", "兩", "零", "百", "千", "万", "萬", "亿", "億",
+    )
+
+    /**
      * [citationReading] gives a character's dictionary reading, used when the
      * next syllable is neutral. 一个 is stored as `yī ge` because 个 reduces in
      * speech, which hides the fourth tone that triggers the 一 rule — so the
@@ -42,9 +53,10 @@ object Sandhi {
                 BU -> if (nextTone == 4) {
                     out[i] = token.copy(annotation = Tones.withTone(reading, 2))
                 }
-                // yī -> yí before a fourth tone, yì before the others. Left
-                // alone in ordinals (第一), where it stays the citation form.
-                YI -> if (i == 0 || out[i - 1].base != ORDINAL_PREFIX) {
+                // yī -> yí before a fourth tone, yì before the others, but
+                // only where 一 is counting something rather than being a
+                // numeral in its own right.
+                YI -> if (yiTakesSandhi(out, i)) {
                     val tone = if (nextTone == 4) 2 else if (nextTone in 1..3) 4 else 0
                     if (tone != 0) out[i] = token.copy(annotation = Tones.withTone(reading, tone))
                 }
@@ -53,6 +65,21 @@ object Sandhi {
 
         if (thirdTone) applyThirdTone(out)
         return out
+    }
+
+    private fun yiTakesSandhi(tokens: List<RubyToken>, at: Int): Boolean {
+        val previous = tokens.getOrNull(at - 1)?.base
+        // 第一 — an ordinal, so no change.
+        if (previous == ORDINAL_PREFIX) return false
+        // 十一月, 二十一 — 一 is a digit inside a larger number.
+        if (previous in DIGITS) return false
+
+        val next = tokens.getOrNull(at + 1)?.base ?: return false
+        // 一月, 一号 — a date, not a count.
+        if (next in DATE_UNITS) return false
+        // 一二三 — reading digits aloud.
+        if (next in DIGITS) return false
+        return true
     }
 
     /**

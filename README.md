@@ -64,8 +64,8 @@ python3 tools/build_dict.py
 
 - `chars.txt` — 44,348 characters, from Unihan `kMandarin` (the preferred reading)
 - `words.txt` — 179,572 words, from CC-CEDICT
-- `defs.txt` — 193,956 English glosses, loaded lazily and only by the sheet, so
-  the always-resident overlay service never pays for them
+- `defs.txt` — 191,587 English glosses, loaded lazily by the sheet and released
+  when it closes
 
 Every headword is kept, because the segmenter needs the whole vocabulary to
 find word boundaries. But only 19,731 of them carry a *reading*: the other
@@ -87,9 +87,13 @@ that cost would be paid over and over.
 
 `SortedTable` instead holds each file as one string plus an index of line
 offsets: a measured **3.2 MB** for both tables (words 2.5 MB, chars 0.7 MB),
-and a lookup is ~18 comparisons. Whole-app Java heap with both dictionaries
-resident measures ~20 MB PSS, most of which is AndroidX and Material rather
-than data.
+and a lookup is ~18 comparisons.
+
+The definitions are a different matter. Every component shares one process, so
+a table the sheet loads stays resident in the process hosting the always-on
+accessibility service. Measured: 13 MB before a lookup, 35 MB after, and it
+never came back — so the sheet now releases it on close, measured back down to
+9 MB with the service still bound.
 
 ## Building the app
 

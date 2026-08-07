@@ -2,15 +2,23 @@ Pinyin Lens bundles data derived from third-party sources.
 
 ------------------------------------------------------------------------------
 CC-CEDICT  ->  app/src/main/assets/words.txt
+               app/src/main/assets/defs.txt
 ------------------------------------------------------------------------------
 Source:  https://www.mdbg.net/chinese/dictionary?page=cc-cedict
 License: Creative Commons Attribution-ShareAlike 4.0 International
          https://creativecommons.org/licenses/by-sa/4.0/
 
-words.txt is an adaptation: entries were filtered to Han-only headwords of 2-6
-characters whose reading differs from the per-character default, and the
-numbered pinyin was converted to tone marks. As an adaptation of a ShareAlike
-work, it must be distributed under CC BY-SA 4.0 with attribution.
+Both files are adaptations of CC-CEDICT and both carry its terms.
+
+words.txt: entries filtered to Han-only headwords of 2-6 characters, with the
+numbered pinyin converted to tone marks, and a reading stored only where it
+differs from the per-character default.
+
+defs.txt: the first English sense of each Han-only headword, truncated, with
+cross-reference-only entries skipped.
+
+As adaptations of a ShareAlike work, both must be distributed under
+CC BY-SA 4.0 with attribution — including inside a built APK.
 
 ------------------------------------------------------------------------------
 Unicode Character Database (Unihan kMandarin)  ->  app/src/main/assets/chars.txt

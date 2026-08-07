@@ -171,6 +171,10 @@ class ProcessTextActivity : AppCompatActivity() {
         // finish() while the activity is already going away.
         speaker?.release()
         speaker = null
+        // The definitions table is several times the size of the readings and
+        // nothing else needs it; holding it would burden the overlay service,
+        // which shares this process.
+        Definitions.release()
         dialog?.setOnDismissListener(null)
         dialog?.dismiss()
         dialog = null

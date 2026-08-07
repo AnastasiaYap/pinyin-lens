@@ -39,6 +39,16 @@ object Definitions {
         return t.value(first)?.let { first to it }
     }
 
+    /**
+     * Every component of this app shares one process, so a table loaded by the
+     * sheet stays resident in the process that hosts the always-on overlay
+     * service — measured at +23 MB, for the life of the service. The sheet
+     * releases it on the way out.
+     */
+    fun release() {
+        table = null
+    }
+
     private suspend fun load(context: Context) {
         if (table != null) return
         loadLock.withLock {

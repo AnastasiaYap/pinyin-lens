@@ -112,7 +112,11 @@ def load_chars() -> dict[str, str]:
     return chars
 
 
-MAX_GLOSS = 48
+MAX_GLOSS = 40
+
+# Single characters glossed only as a surname or a variant tell a reader
+# nothing, and they are ~25% of the single-character entries.
+LOW_VALUE = ("surname ", "variant of", "old variant", "used in", "see ")
 
 
 def load_defs(text: str) -> dict[str, str]:
@@ -140,7 +144,11 @@ def load_defs(text: str) -> dict[str, str]:
             first = first[: MAX_GLOSS - 1].rstrip() + "\u2026"
 
         for form in {simp, trad}:
-            if all_han(form) and 1 <= len(form) <= MAX_WORD_LEN and form not in defs:
+            if not all_han(form) or not (1 <= len(form) <= MAX_WORD_LEN):
+                continue
+            if len(form) == 1 and first.startswith(LOW_VALUE):
+                continue
+            if form not in defs:
                 defs[form] = first
     return defs
 

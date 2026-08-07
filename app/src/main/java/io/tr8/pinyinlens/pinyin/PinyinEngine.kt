@@ -114,34 +114,73 @@ object PinyinEngine {
     ): List<RubyToken> {
         val out = ArrayList<RubyToken>(run.size)
         var i = 0
-        while (i < run.size) {
-            var matched = false
-            val longest = minOf(MAX_WORD_LEN, run.size - i)
-            for (len in longest downTo 2) {
-                val candidate = run.subList(i, i + len).joinToString("")
+        for (length in segment(run, wordTable)) {
+            val word = if (length == 1) null else run.subList(i, i + length).joinToString("")
+            val syllables = word?.let { candidate ->
                 val line = wordTable.indexOf(candidate)
-                if (line < 0) continue
-
-                // Most entries carry no reading: the word exists only to mark a
-                // boundary, because its pronunciation is just the per-character
-                // default. Those still group and still resist mid-word breaks.
-                val syllables = wordTable.valueAt(line)?.split(' ')
-                if (syllables != null && syllables.size != len) continue
-
-                for (k in 0 until len) {
-                    val syllable = syllables?.get(k) ?: charTable.value(run[i + k])
-                    out += RubyToken(run[i + k], syllable, startsWord = k == 0)
-                }
-                i += len
-                matched = true
-                break
+                if (line < 0) null else wordTable.valueAt(line)?.split(' ')
             }
-            if (!matched) {
-                out += RubyToken(run[i], charTable.value(run[i]))
-                i++
+            for (k in 0 until length) {
+                val syllable = syllables?.getOrNull(k) ?: charTable.value(run[i + k])
+                out += RubyToken(run[i + k], syllable, startsWord = k == 0)
             }
+            i += length
         }
         return out
+    }
+
+    /**
+     * Splits a run of Han characters into word lengths.
+     *
+     * Greedy longest-match commits to the longest word at each position and
+     * cannot back out, which mis-segments 北京大学生 as 北京大学 / 生. Running the
+     * same greedy match from the right as well and keeping the better parse
+     * fixes that case and 研究生命科学, at the cost of one extra pass.
+     */
+    private fun segment(run: List<String>, wordTable: SortedTable): List<Int> {
+        val forward = greedy(run, wordTable, fromLeft = true)
+        val backward = greedy(run, wordTable, fromLeft = false)
+        if (forward.size != backward.size) {
+            return if (forward.size < backward.size) forward else backward
+        }
+        // Same word count: prefer the parse that strands fewer lone characters.
+        val forwardSingles = forward.count { it == 1 }
+        val backwardSingles = backward.count { it == 1 }
+        return if (backwardSingles < forwardSingles) backward else forward
+    }
+
+    private fun greedy(
+        run: List<String>,
+        wordTable: SortedTable,
+        fromLeft: Boolean,
+    ): List<Int> {
+        val lengths = ArrayList<Int>()
+        var cursor = if (fromLeft) 0 else run.size
+
+        while (if (fromLeft) cursor < run.size else cursor > 0) {
+            val remaining = if (fromLeft) run.size - cursor else cursor
+            var taken = 1
+            for (len in minOf(MAX_WORD_LEN, remaining) downTo 2) {
+                val from = if (fromLeft) cursor else cursor - len
+                val candidate = run.subList(from, from + len).joinToString("")
+                val line = wordTable.indexOf(candidate)
+                if (line < 0) continue
+                // Reject a word whose stored reading does not line up with its
+                // characters; it would annotate the wrong syllables.
+                val syllables = wordTable.valueAt(line)?.split(' ')
+                if (syllables != null && syllables.size != len) continue
+                taken = len
+                break
+            }
+            if (fromLeft) {
+                lengths += taken
+                cursor += taken
+            } else {
+                lengths.add(0, taken)
+                cursor -= taken
+            }
+        }
+        return lengths
     }
 
     private fun isHan(codePoint: Int): Boolean = when (Character.UnicodeScript.of(codePoint)) {

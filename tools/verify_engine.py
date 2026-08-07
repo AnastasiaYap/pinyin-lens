@@ -52,31 +52,59 @@ def is_han(ch):
     return "CJK" in name and "IDEOGRAPH" in name
 
 
-def annotate(text):
+def _greedy(run, from_left):
+    """One direction of greedy longest match; returns word lengths."""
+    lengths = []
+    cursor = 0 if from_left else len(run)
+    while (cursor < len(run)) if from_left else (cursor > 0):
+        remaining = len(run) - cursor if from_left else cursor
+        taken = 1
+        for length in range(min(MAX_WORD_LEN, remaining), 1, -1):
+            start = cursor if from_left else cursor - length
+            candidate = "".join(run[start:start + length])
+            reading = WORDS.get(candidate)
+            if reading is None:
+                continue
+            syllables = reading.split(" ") if reading else None
+            if syllables is not None and len(syllables) != length:
+                continue
+            taken = length
+            break
+        if from_left:
+            lengths.append(taken)
+            cursor += taken
+        else:
+            lengths.insert(0, taken)
+            cursor -= taken
+    return lengths
+
+
+def segment(run):
+    """Bidirectional matching, mirroring PinyinEngine.segment."""
+    forward = _greedy(run, True)
+    backward = _greedy(run, False)
+    if len(forward) != len(backward):
+        return forward if len(forward) < len(backward) else backward
+    return backward if backward.count(1) < forward.count(1) else forward
+
+
+def annotate(text, third_tone=False):
     """Returns a list of (base, annotation|None, starts_word), as Kotlin does."""
     out, run = [], []
 
     def flush_run():
         i = 0
-        while i < len(run):
-            matched = False
-            for length in range(min(MAX_WORD_LEN, len(run) - i), 1, -1):
-                candidate = "".join(run[i:i + length])
-                reading = WORDS.get(candidate)
-                if reading is None:
-                    continue
-                syllables = reading.split(" ") if reading else None
-                if syllables is not None and len(syllables) != length:
-                    continue
-                for k in range(length):
-                    syllable = syllables[k] if syllables else CHARS.get(run[i + k])
-                    out.append((run[i + k], syllable, k == 0))
-                i += length
-                matched = True
-                break
-            if not matched:
-                out.append((run[i], CHARS.get(run[i]), True))
-                i += 1
+        for length in segment(run):
+            word = "".join(run[i:i + length]) if length > 1 else None
+            reading = WORDS.get(word) if word else None
+            syllables = reading.split(" ") if reading else None
+            for k in range(length):
+                syllable = (
+                    syllables[k] if syllables and k < len(syllables)
+                    else CHARS.get(run[i + k])
+                )
+                out.append((run[i + k], syllable, k == 0))
+            i += length
         run.clear()
 
     plain = []
@@ -92,17 +120,110 @@ def annotate(text):
     flush_run()
     if plain:
         out.append(("".join(plain), None, True))
+    return apply_sandhi(out, third_tone)
+
+
+# --- tone sandhi, mirroring Sandhi.kt -------------------------------------
+
+MARKS = {}
+PLAIN = {}
+ROWS = {"a": "āáǎà", "o": "ōóǒò", "e": "ēéěè",
+        "i": "īíǐì", "u": "ūúǔù", "ü": "ǖǘǚǜ"}
+for base, row in ROWS.items():
+    for tone, ch in enumerate(row, start=1):
+        MARKS[ch] = tone
+        PLAIN[ch] = base
+
+DATE_UNITS = {"月", "日", "号", "號"}
+DIGITS = {"一","二","三","四","五","六","七","八","九","十",
+          "两","兩","零","百","千","万","萬","亿","億"}
+
+
+def tone_of(syllable):
+    for ch in syllable or "":
+        if ch in MARKS:
+            return MARKS[ch]
+    return 5
+
+
+def strip_tone(syllable):
+    return "".join(PLAIN.get(ch, ch) for ch in syllable)
+
+
+def with_tone(syllable, tone):
+    plain = strip_tone(syllable)
+    if tone == 5:
+        return plain
+    index = -1
+    for vowel in "aoe":
+        if vowel in plain:
+            index = plain.index(vowel)
+            break
+    if index < 0:
+        for i in range(len(plain) - 1, -1, -1):
+            if plain[i] in ROWS:
+                index = i
+                break
+    if index < 0:
+        return plain
+    return plain[:index] + ROWS[plain[index]][tone - 1] + plain[index + 1:]
+
+
+def apply_sandhi(tokens, third_tone):
+    out = list(tokens)
+
+    def next_tone(i):
+        if i + 1 >= len(out):
+            return None
+        reading = out[i + 1][1]
+        if reading is None:
+            return None
+        tone = tone_of(reading)
+        if tone != 5:
+            return tone
+        citation = CHARS.get(out[i + 1][0])
+        return tone_of(citation) if citation else tone
+
+    def yi_takes_sandhi(i):
+        previous = out[i - 1][0] if i > 0 else None
+        if previous == "第" or previous in DIGITS:
+            return False
+        if i + 1 >= len(out):
+            return False
+        following = out[i + 1][0]
+        return following not in DATE_UNITS and following not in DIGITS
+
+    for i, (base, reading, starts) in enumerate(out):
+        if reading is None:
+            continue
+        tone = next_tone(i)
+        if tone is None:
+            continue
+        if base == "不" and tone == 4:
+            out[i] = (base, with_tone(reading, 2), starts)
+        elif base == "一" and yi_takes_sandhi(i):
+            new = 2 if tone == 4 else (4 if 1 <= tone <= 3 else 0)
+            if new:
+                out[i] = (base, with_tone(reading, new), starts)
+
+    if third_tone:
+        for i in range(len(out) - 1):
+            current, following = out[i], out[i + 1]
+            if current[1] is None or following[1] is None or following[2]:
+                continue
+            if tone_of(current[1]) == 3 and tone_of(following[1]) == 3:
+                out[i] = (current[0], with_tone(current[1], 2), current[2])
     return out
 
 
-def reading_of(text):
-    return " ".join(a for _, a, _ in annotate(text) if a)
+def reading_of(text, third_tone=False):
+    return " ".join(a for _, a, _ in annotate(text, third_tone) if a)
 
 
-def words_of(text):
+def words_of(text, third_tone=False):
     """Regroups tokens into the words the renderer will visually group."""
     groups = []
-    for base, ann, starts in annotate(text):
+    for base, ann, starts in annotate(text, third_tone):
         if ann is None:
             continue
         if starts or not groups:
@@ -142,8 +263,45 @@ SEGMENT_CASES = [
 ]
 
 
+# Sandhi: the readings the app shows are not the citation forms, and until
+# these existed a regression here was invisible to CI.
+SANDHI_CASES = [
+    ("不是",   "bú shì",     False),
+    ("不对",   "bú duì",     False),
+    ("不好",   "bù hǎo",     False),
+    ("一个",   "yí ge",      False),
+    ("一天",   "yì tiān",    False),
+    # 一 as a numeral rather than a count: no change.
+    ("一月",   "yī yuè",     False),
+    ("一号",   "yī hào",     False),
+    ("一二三", "yī èr sān",  False),
+    ("十一月", "shí yī yuè", False),
+    ("第一课", "dì yī kè",   False),
+    # Third tone is opt-in.
+    ("你好",   "nǐ hǎo",     False),
+    ("你好",   "ní hǎo",     True),
+]
+
+# Segmentation cases that greedy forward matching alone gets wrong.
+BIDI_CASES = [
+    ("北京大学生",  ["北京", "大学生"]),
+    ("研究生命科学", ["研究", "生命科学"]),
+]
+
+
 def main():
     failures = []
+
+    for text, expected, third in SANDHI_CASES:
+        actual = reading_of(text, third)
+        if actual != expected:
+            failures.append((f"{text} (3rd tone={third})", expected, actual))
+
+    for text, expected in BIDI_CASES:
+        actual = words_of(text)
+        if actual != expected:
+            failures.append((text, " / ".join(expected), " / ".join(actual)))
+
     for text, expected in CASES:
         actual = reading_of(text)
         if actual != expected:
@@ -172,7 +330,7 @@ def main():
         if problem:
             failures.append((name, "sorted for binary search", problem))
 
-    total = len(CASES) + len(SEGMENT_CASES) + 4
+    total = len(CASES) + len(SEGMENT_CASES) + len(SANDHI_CASES) + len(BIDI_CASES) + 4
     for text, expected, actual in failures:
         print(f"FAIL {text}\n  expected: {expected}\n  actual:   {actual}")
 
