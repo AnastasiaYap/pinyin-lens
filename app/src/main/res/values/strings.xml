@@ -2,6 +2,9 @@
 <resources>
     <string name="app_name">Pinyin Lens</string>
     <string name="process_text_label">Pinyin</string>
+    <string name="clipboard_tile">Pinyin clipboard</string>
+    <string name="clipboard_empty">Nothing on the clipboard to read.</string>
+    <string name="add_clipboard_tile">Add clipboard tile</string>
 
     <string name="lens_title">Pinyin lens</string>
     <string name="lens_summary">Adds \"Pinyin\" to the text-selection menu. Highlight Chinese anywhere, tap it, and read the selection with pinyin above each character.</string>
@@ -14,7 +17,12 @@
 
     <string name="help_button">How to use</string>
     <string name="welcome_title">How to use Pinyin Lens</string>
-    <string name="welcome_body"><![CDATA[There are two ways to read pinyin.<br/><br/><b>Highlight text</b><br/>Select any Chinese text, then tap <b>Pinyin</b> in the selection toolbar. On ColorOS it usually sits behind the <b>&#8942;</b> overflow button, next to Translate and Copy. The selection opens with pinyin above each character.<br/><br/><b>Whole screen</b><br/>Annotates every text block on screen with cards drawn over it. This one needs the Android accessibility permission — the app walks you through it. Text inside pictures, games and video subtitles cannot be read, so it stays unannotated.<br/><br/>Either mode can be switched on and off from the notification or the Quick Settings tile.<br/><br/><b>Found a bug?</b><br/>Email <b>yy@yyhsk.com</b> — there is a Report a bug button at the bottom of this screen that fills in your version and device.]]></string>
+    <string name="welcome_body"><![CDATA[There are two ways to read pinyin.<br/><br/><b>Highlight text</b><br/>Select any Chinese text, then tap <b>Pinyin</b> in the selection toolbar. On ColorOS it usually sits behind the <b>&#8942;</b> overflow button, next to Translate and Copy. The selection opens with pinyin above each character.<br/><br/><b>Whole screen</b><br/>Annotates every text block on screen with cards drawn over it. This one needs the Android accessibility permission — the app walks you through it. Text inside pictures, games and video subtitles cannot be read, so it stays unannotated.<br/><br/><b>If Pinyin is missing from the selection menu</b><br/>
+Some apps never offer it — they make their text unselectable, use their own selection menu, or do not declare the permission Android 11 requires to see other apps\' text actions. Chrome offers it; many Chinese apps do not. Three ways in when that happens:<br/>
+&#8226; <b>Share</b> the text to Pinyin Lens instead.<br/>
+&#8226; <b>Copy</b> it, then tap the <b>Pinyin clipboard</b> tile in Quick Settings.<br/>
+&#8226; Turn on <b>Whole screen</b>, which needs no selection at all.<br/><br/>
+Either mode can be switched on and off from the notification or the Quick Settings tile.<br/><br/><b>Found a bug?</b><br/>Email <b>yy@yyhsk.com</b> — there is a Report a bug button at the bottom of this screen that fills in your version and device.]]></string>
 
     <string name="regrant_title">Whole screen needs permission again</string>
     <string name="regrant_text">The update cleared the accessibility permission. Tap to switch Pinyin Lens back on.</string>

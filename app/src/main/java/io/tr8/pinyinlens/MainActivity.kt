@@ -28,6 +28,7 @@ import io.tr8.pinyinlens.update.UpdateChecker
 import io.tr8.pinyinlens.update.Updater
 import io.tr8.pinyinlens.overlay.AccessibilitySettings
 import io.tr8.pinyinlens.overlay.PinyinAccessibilityService
+import io.tr8.pinyinlens.toggle.ClipboardTileService
 import io.tr8.pinyinlens.toggle.Lens
 import io.tr8.pinyinlens.toggle.Overlay
 import io.tr8.pinyinlens.toggle.NotificationController
@@ -108,7 +109,11 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             binding.addTile.visibility = View.VISIBLE
             binding.tileHint.visibility = View.GONE
-            binding.addTile.setOnClickListener { requestAddTile() }
+            binding.addTile.setOnClickListener { requestAddTile(PinyinTileService::class.java, R.string.app_name) }
+            binding.addClipboardTile.visibility = View.VISIBLE
+            binding.addClipboardTile.setOnClickListener {
+                requestAddTile(ClipboardTileService::class.java, R.string.clipboard_tile)
+            }
         }
 
         binding.overlaySwitch.setOnCheckedChangeListener { button, checked ->
@@ -236,10 +241,10 @@ class MainActivity : AppCompatActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-    private fun requestAddTile() {
+    private fun requestAddTile(service: Class<*>, labelRes: Int) {
         getSystemService(StatusBarManager::class.java).requestAddTileService(
-            ComponentName(this, PinyinTileService::class.java),
-            getString(R.string.app_name),
+            ComponentName(this, service),
+            getString(labelRes),
             Icon.createWithResource(this, R.drawable.ic_notification),
             mainExecutor,
         ) { result ->

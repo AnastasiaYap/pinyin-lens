@@ -6,6 +6,7 @@ import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.view.View
+import android.view.ViewTreeObserver
 import android.view.WindowManager
 import android.widget.ProgressBar
 import android.widget.TextView
@@ -45,6 +46,7 @@ class ProcessTextActivity : AppCompatActivity() {
     private var dialog: BottomSheetDialog? = null
     private var annotateJob: Job? = null
     private var tokens: List<RubyToken> = emptyList()
+    private var wantsClipboard = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +55,9 @@ class ProcessTextActivity : AppCompatActivity() {
         // whatever we hand back. We only ever read, so cancel explicitly.
         setResult(RESULT_CANCELED)
 
-        if (readSelection(intent) == null) {
+        wantsClipboard = intent.action == ACTION_READ_CLIPBOARD
+
+        if (!wantsClipboard && readSelection(intent) == null) {
             // Silently finishing here is indistinguishable from the app being
             // broken, which is exactly how it looks to someone tapping Pinyin
             // and getting nothing.
@@ -96,7 +100,42 @@ class ProcessTextActivity : AppCompatActivity() {
             show()
         }
 
-        bind(intent)
+        if (wantsClipboard) awaitFocusThenReadClipboard() else bind(intent)
+    }
+
+    /**
+     * Since Android 10 the clipboard may only be read by an app that holds
+     * focus. The sheet is a dialog, so it is the *dialog's* window that gets
+     * focus, not the activity's — Activity.onWindowFocusChanged never fires
+     * here and reading in onCreate or onResume is too early.
+     */
+    private fun awaitFocusThenReadClipboard() {
+        val decor = dialog?.window?.decorView ?: return
+        decor.viewTreeObserver.addOnWindowFocusChangeListener(
+            object : ViewTreeObserver.OnWindowFocusChangeListener {
+                override fun onWindowFocusChanged(hasFocus: Boolean) {
+                    if (!hasFocus) return
+                    decor.viewTreeObserver.removeOnWindowFocusChangeListener(this)
+                    if (!wantsClipboard) return
+                    wantsClipboard = false
+
+                    val text = clipboardText()
+                    if (text.isNullOrBlank()) {
+                        Toast.makeText(
+                            this@ProcessTextActivity,
+                            R.string.clipboard_empty,
+                            Toast.LENGTH_SHORT,
+                        ).show()
+                        finish()
+                        return
+                    }
+                    bind(
+                        Intent(Intent.ACTION_PROCESS_TEXT)
+                            .putExtra(Intent.EXTRA_PROCESS_TEXT, text)
+                    )
+                }
+            }
+        )
     }
 
     /**
@@ -163,9 +202,27 @@ class ProcessTextActivity : AppCompatActivity() {
         annotate(selection)
     }
 
-    private fun rawSelection(intent: Intent): String? =
-        (intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
-            ?: intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT_READONLY))?.toString()
+    private fun rawSelection(intent: Intent): String? {
+        val fromSelection = intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT)
+            ?: intent.getCharSequenceExtra(Intent.EXTRA_PROCESS_TEXT_READONLY)
+        if (fromSelection != null) return fromSelection.toString()
+        // Shared from an app whose selection toolbar never offers us.
+        if (intent.action == Intent.ACTION_SEND) {
+            return intent.getCharSequenceExtra(Intent.EXTRA_TEXT)?.toString()
+        }
+        return null
+    }
+
+    /**
+     * The clipboard can only be read with window focus since Android 10, so
+     * this is deferred until [onWindowFocusChanged] rather than read here.
+     */
+    private fun clipboardText(): String? {
+        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+        val clip = clipboard.primaryClip ?: return null
+        if (clip.itemCount == 0) return null
+        return clip.getItemAt(0).coerceToText(this)?.toString()
+    }
 
     private fun selectionLength(intent: Intent) = rawSelection(intent)?.length ?: 0
 
@@ -213,7 +270,10 @@ class ProcessTextActivity : AppCompatActivity() {
         Toast.makeText(this, R.string.copied, Toast.LENGTH_SHORT).show()
     }
 
-    private companion object {
-        const val MAX_CHARS = 5_000
+    companion object {
+        /** Launched from the Quick Settings tile: read whatever was copied. */
+        const val ACTION_READ_CLIPBOARD = "io.tr8.pinyinlens.READ_CLIPBOARD"
+
+        private const val MAX_CHARS = 5_000
     }
 }

@@ -156,6 +156,25 @@ python3 tools/verify_engine.py
 ./build.sh testDebugUnitTest        # SortedTable's binary search
 ```
 
+## When the selection menu does not offer Pinyin
+
+The text-selection toolbar is not ours to control. An app can suppress the
+entry three ways, all outside this app's reach:
+
+- it makes its text unselectable, so there is no toolbar at all;
+- it replaces the system toolbar with its own fixed menu;
+- targeting API 30+, it never declared the `<queries>` entry that Android 11
+  requires before an app can see third-party text actions.
+
+Chrome offers it. Many apps — Gmail, Xiaohongshu, Weibo — do not. So there are
+three routes in that need no cooperation from the host app:
+
+- **Share** the text to Pinyin Lens. Share is offered far more widely than
+  PROCESS_TEXT.
+- **Copy** it, then tap the **Pinyin clipboard** Quick Settings tile. Copy works
+  almost everywhere, and the tile reads whatever is on the clipboard.
+- **Whole screen**, which reads the screen directly and needs no selection.
+
 ## Whole screen
 
 ![Overlay](docs/overlay.png)
